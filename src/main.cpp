@@ -4,11 +4,11 @@
 
 #include "vector.hpp"
 #include "ray.hpp"
-#include "hittable.hpp"
+#include "i_world_object.hpp"
 #include "sphere.hpp"
 #include "camera.hpp"
 
-Vector get_color_at(const Ray &ray, const std::vector<Hittable *> &world)
+Vector get_color_at(const Ray &ray, const std::vector<IWorldObject *> &world)
 {
     Vector base_color(0.0, 0.0, 0.0);
 
@@ -16,7 +16,7 @@ Vector get_color_at(const Ray &ray, const std::vector<Hittable *> &world)
     {
         if (object->hits(ray))
         {
-            return Vector(255, 255, 255);
+            return object->get_material().color();
         }
     }
 
@@ -38,11 +38,11 @@ int main()
 
     //
 
-    std::vector<Hittable *> world;
+    std::vector<IWorldObject *> world;
 
-    world.push_back(new Sphere(Vector(0.0f, 0.0f, -1.0f), 0.5f));
-    world.push_back(new Sphere(Vector(-1.0f, 0.0f, -1.0f), 0.3f));
-    world.push_back(new Sphere(Vector(1.0f, 0.0f, -1.0f), 0.3f));
+    world.push_back(new Sphere(Vector(0.0f, 0.0f, -1.0f), 0.5f, Material(Vector(255.0, 0.0, 0.0))));
+    world.push_back(new Sphere(Vector(-1.0f, 0.0f, -1.0f), 0.3f, Material(Vector(0.0, 255.0, 0.0))));
+    world.push_back(new Sphere(Vector(1.0f, 0.0f, -1.0f), 0.3f, Material(Vector(0.0, 0.0, 255.0))));
 
     //
 
