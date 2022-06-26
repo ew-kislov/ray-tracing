@@ -1,17 +1,26 @@
 #include <stdio.h>
-#include <iostream>
+#include <vector>
 #include <cmath>
 
 #include "vector.hpp"
+#include "ray.hpp"
+#include "hittable.hpp"
+#include "sphere.hpp"
+#include "camera.hpp"
 
-bool hit_sphere(const Vector &origin, const Vector &direction, const Vector &center, double radius)
+Vector get_color_at(const Ray &ray, const std::vector<Hittable *> &world)
 {
-    Vector oc = origin - center;
-    auto a = Vector::dot(direction, direction);
-    auto b = 2.0 * Vector::dot(oc, direction);
-    auto c = Vector::dot(oc, oc) - radius * radius;
-    auto discriminant = b * b - 4 * a * c;
-    return (discriminant > 0);
+    Vector base_color(0.0, 0.0, 0.0);
+
+    for (const auto object : world)
+    {
+        if (object->hits(ray))
+        {
+            return Vector(255, 255, 255);
+        }
+    }
+
+    return base_color;
 }
 
 int main()
@@ -20,14 +29,7 @@ int main()
     const int image_width = 400;
     const int image_height = static_cast<int>(image_width / aspect_ratio);
 
-    double viewport_height = 2.0;
-    double viewport_width = aspect_ratio * viewport_height;
-    double focal_length = 1.0;
-
-    Vector origin = Vector(0, 0, 0);
-    Vector horizontal = Vector(viewport_width, 0, 0);
-    Vector vertical = Vector(0, viewport_height, 0);
-    Vector lower_left_corner = origin - horizontal / 2 - vertical / 2 - Vector(0, 0, focal_length);
+    Camera camera(Vector(0, 0, 2), Vector(0, 0, -1), Vector(0, 1, 0), 30, aspect_ratio);
 
     //
 
@@ -36,8 +38,13 @@ int main()
 
     //
 
-    const Vector sphere_pos = Vector(0.0, 0.0, -1.0);
-    const float sphere_radius = 0.5;
+    std::vector<Hittable *> world;
+
+    world.push_back(new Sphere(Vector(0.0f, 0.0f, -1.0f), 0.5f));
+    world.push_back(new Sphere(Vector(-1.0f, 0.0f, -1.0f), 0.3f));
+    world.push_back(new Sphere(Vector(1.0f, 0.0f, -1.0f), 0.3f));
+
+    //
 
     for (int j = image_height - 1; j >= 0; --j)
     {
@@ -45,16 +52,10 @@ int main()
         {
             double u = double(i) / (image_width - 1);
             double v = double(j) / (image_height - 1);
-            Vector direction = Vector(lower_left_corner + u * horizontal + v * vertical - origin);
 
-            if (hit_sphere(origin, direction, sphere_pos, sphere_radius))
-            {
-                fprintf(f, "%d %d %d ", 255, 255, 255);
-            }
-            else
-            {
-                fprintf(f, "%d %d %d ", 0, 0, 0);
-            }
+            Vector color = get_color_at(camera.get_ray(u, v), world);
+
+            fprintf(f, "%d %d %d ", int(color.x()), int(color.y()), int(color.z()));
         }
         fprintf(f, "\n");
     }
